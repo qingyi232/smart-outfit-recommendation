@@ -1,0 +1,360 @@
+/* ========== 智能出行穿衣服务系统 —— 清新自然风格 ========== */
+:root {
+  --primary: #3a9d6e;
+  --primary-light: #5bb88a;
+  --primary-lighter: #e8f5ef;
+  --primary-dark: #2d7d56;
+  --accent: #e8985a;
+  --accent-light: #f0b88a;
+  --accent-lighter: #fef3ea;
+  --secondary: #5a8fa8;
+  --secondary-light: #7db3c9;
+  --bg-main: #f5f7f4;
+  --bg-card: #ffffff;
+  --bg-aside: #fafbfa;
+  --text-primary: #2c3e35;
+  --text-secondary: #6b7f75;
+  --text-light: #99aa9f;
+  --border: #e2e8e4;
+  --border-light: #eef2ef;
+  --shadow-sm: 0 1px 3px rgba(42, 70, 55, 0.06);
+  --shadow-md: 0 4px 12px rgba(42, 70, 55, 0.08);
+  --shadow-lg: 0 8px 24px rgba(42, 70, 55, 0.10);
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+  background: var(--bg-main);
+  color: var(--text-primary);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+a { color: var(--primary); text-decoration: none; }
+a:hover { color: var(--primary-dark); }
+
+/* ===== Element Plus 主题覆盖 ===== */
+.el-button--primary {
+  --el-button-bg-color: var(--primary) !important;
+  --el-button-border-color: var(--primary) !important;
+  --el-button-hover-bg-color: var(--primary-light) !important;
+  --el-button-hover-border-color: var(--primary-light) !important;
+  --el-button-active-bg-color: var(--primary-dark) !important;
+}
+
+.el-menu--horizontal > .el-menu-item.is-active {
+  border-bottom-color: var(--primary) !important;
+  color: var(--primary) !important;
+}
+
+.el-aside {
+  background: var(--bg-card);
+  border-right: 1px solid var(--border-light);
+}
+
+.el-menu {
+  border-right: none !important;
+}
+
+.el-menu-item.is-active {
+  color: var(--primary) !important;
+  background: var(--primary-lighter) !important;
+}
+
+.el-card {
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+}
+
+/* ===== 全局布局 ===== */
+.app-container {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.page-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 24px;
+  width: 100%;
+}
+
+/* ===== 通用卡片 ===== */
+.stat-card {
+  background: var(--bg-card);
+  border-radius: var(--radius-md);
+  padding: 20px 24px;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-light);
+  transition: box-shadow 0.3s, transform 0.3s;
+}
+.stat-card:hover {
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
+}
+.stat-card .stat-value {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--primary);
+  margin-bottom: 4px;
+}
+.stat-card .stat-label {
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+.stat-card .stat-icon {
+  font-size: 32px;
+  color: var(--primary-light);
+  opacity: 0.7;
+}
+
+/* ===== 天气卡片 ===== */
+.weather-hero {
+  background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+  border-radius: var(--radius-lg);
+  padding: 32px;
+  color: #fff;
+  position: relative;
+  overflow: hidden;
+}
+.weather-hero::after {
+  content: '';
+  position: absolute;
+  top: -30%;
+  right: -10%;
+  width: 300px;
+  height: 300px;
+  background: rgba(255,255,255,0.08);
+  border-radius: 50%;
+}
+.weather-hero .temp-display {
+  font-size: 56px;
+  font-weight: 200;
+  letter-spacing: -2px;
+}
+.weather-hero .weather-info {
+  font-size: 14px;
+  opacity: 0.9;
+  margin-top: 8px;
+}
+
+/* ===== 推荐卡片 ===== */
+.outfit-card {
+  background: var(--bg-card);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-light);
+  transition: all 0.3s;
+}
+.outfit-card:hover {
+  box-shadow: var(--shadow-md);
+  transform: translateY(-3px);
+}
+.outfit-card .outfit-img {
+  width: 100%;
+  height: 200px;
+  object-fit: cover;
+}
+.outfit-card .outfit-info {
+  padding: 16px;
+}
+.outfit-card .outfit-name {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 6px;
+}
+.outfit-card .outfit-tag {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+  background: var(--primary-lighter);
+  color: var(--primary);
+  margin-right: 6px;
+  margin-bottom: 4px;
+}
+.outfit-card .outfit-tag.accent {
+  background: var(--accent-lighter);
+  color: var(--accent);
+}
+
+/* ===== 场景选择 ===== */
+.scene-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 12px;
+}
+.scene-item {
+  background: var(--bg-card);
+  border: 2px solid var(--border-light);
+  border-radius: var(--radius-md);
+  padding: 20px 16px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.25s;
+}
+.scene-item:hover {
+  border-color: var(--primary-light);
+  background: var(--primary-lighter);
+}
+.scene-item.active {
+  border-color: var(--primary);
+  background: var(--primary-lighter);
+}
+.scene-item .scene-icon {
+  font-size: 28px;
+  margin-bottom: 8px;
+}
+.scene-item .scene-name {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+/* ===== 评分条 ===== */
+.score-bar {
+  height: 6px;
+  background: var(--border-light);
+  border-radius: 3px;
+  overflow: hidden;
+}
+.score-bar .score-fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.6s ease;
+}
+.score-bar .score-fill.green { background: var(--primary); }
+.score-bar .score-fill.orange { background: var(--accent); }
+.score-bar .score-fill.blue { background: var(--secondary); }
+
+/* ===== 登录页 ===== */
+.auth-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(160deg, #e8f5ef 0%, #f0f7f4 40%, #fef9f4 100%);
+}
+.auth-card {
+  background: var(--bg-card);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  padding: 48px 40px;
+  width: 420px;
+  max-width: 90vw;
+}
+.auth-card .auth-title {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--text-primary);
+  text-align: center;
+  margin-bottom: 8px;
+}
+.auth-card .auth-subtitle {
+  font-size: 14px;
+  color: var(--text-secondary);
+  text-align: center;
+  margin-bottom: 32px;
+}
+
+/* ===== 管理端侧边栏 ===== */
+.admin-layout {
+  min-height: 100vh;
+  display: flex;
+}
+.admin-sidebar {
+  width: 220px;
+  background: var(--bg-card);
+  border-right: 1px solid var(--border-light);
+  padding-top: 0;
+  flex-shrink: 0;
+}
+.admin-sidebar .logo-area {
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--primary);
+  border-bottom: 1px solid var(--border-light);
+}
+.admin-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.admin-header {
+  height: 60px;
+  background: var(--bg-card);
+  border-bottom: 1px solid var(--border-light);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+}
+.admin-content {
+  flex: 1;
+  padding: 24px;
+  background: var(--bg-main);
+  overflow-y: auto;
+}
+
+/* ===== AI 模型选择卡片 ===== */
+.model-card {
+  flex: 1;
+  padding: 16px 12px;
+  border-radius: var(--radius-md);
+  background: var(--bg-card);
+  border: 2px solid transparent;
+  cursor: pointer;
+  text-align: center;
+  transition: all 0.25s;
+}
+.model-card:hover {
+  border-color: var(--primary-light);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+}
+.model-card.active {
+  border-color: var(--primary);
+  background: linear-gradient(135deg, rgba(76,175,116,0.08), rgba(76,175,116,0.02));
+  box-shadow: 0 4px 16px rgba(76,175,116,0.15);
+}
+.model-icon {
+  font-size: 28px;
+  margin-bottom: 6px;
+}
+.model-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+}
+.model-desc {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+.model-card.active .model-name {
+  color: var(--primary);
+}
+
+/* ===== 响应式 ===== */
+@media (max-width: 768px) {
+  .page-container { padding: 16px; }
+  .weather-hero { padding: 24px; }
+  .weather-hero .temp-display { font-size: 42px; }
+  .admin-sidebar { width: 64px; }
+  .admin-sidebar .logo-area { font-size: 12px; }
+  .scene-grid { grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); }
+}

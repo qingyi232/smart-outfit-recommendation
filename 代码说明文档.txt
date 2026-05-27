@@ -1,0 +1,856 @@
+================================================================================
+  基于环境信息感知的智能出行穿衣服务系统 —— 代码说明文档
+================================================================================
+
+
+
+================================================================================
+一、项目概述
+================================================================================
+
+  项目名称：基于环境信息感知的智能出行穿衣服务系统
+  架构模式：前后端分离（B/S 架构）
+  后端框架：Python 3.10+ / Flask 3.1
+  前端框架：Vue 3 + Vite 6 + Element Plus
+  数据库：  SQLite（开发环境）/ MySQL（可选生产环境）
+  认证方式：JWT（JSON Web Token）
+  核心算法：决策树分类 + 用户协同过滤
+
+================================================================================
+二、项目目录结构
+================================================================================
+
+基于环境信息感知的智能出行穿衣服务系统/
+│
+├── backend/                          # 后端代码（Python Flask）
+│   ├── app/                          # Flask 应用主目录
+│   │   ├── __init__.py               # Flask 应用工厂（create_app）
+│   │   ├── config.py                 # 配置文件（数据库、JWT、天气API等）
+│   │   │
+│   │   ├── models/                   # 数据库模型层（ORM）
+│   │   │   ├── __init__.py           # 模型包初始化
+│   │   │   ├── user.py               # 用户模型（User）
+│   │   │   ├── clothing.py           # 服装模型（Clothing + ClothingCategory）
+│   │   │   ├── weather.py            # 天气记录模型（WeatherRecord）
+│   │   │   └── recommendation.py     # 推荐模型（Recommendation + UserFeedback + UserPreference）
+│   │   │
+│   │   ├── routes/                   # API 路由层（Controller）
+│   │   │   ├── __init__.py           # 路由包初始化
+│   │   │   ├── auth.py               # 认证路由（登录/注册/个人信息）
+│   │   │   ├── weather.py            # 天气路由（实时天气/预报/舒适度）
+│   │   │   ├── recommendation.py     # 推荐路由（生成推荐/历史/反馈）
+│   │   │   ├── clothing.py           # 服装路由（分类/列表/详情）
+│   │   │   ├── user.py               # 用户路由（仪表盘/偏好管理）
+│   │   │   └── admin.py              # 管理员路由（后台所有管理接口）
+│   │   │
+│   │   ├── services/                 # 业务逻辑服务层
+│   │   │   ├── __init__.py           # 服务包初始化
+│   │   │   ├── weather_service.py    # 天气数据获取与缓存服务
+│   │   │   └── recommendation_engine.py  # 推荐引擎（决策树 + 协同过滤）
+│   │   │
+│   │   └── utils/                    # 工具函数
+│   │       └── __init__.py
+│   │
+│   ├── run.py                        # 后端启动入口
+│   ├── init_db.py                    # 数据库初始化脚本（建表 + 填充示例数据）
+│   ├── requirements.txt              # Python 依赖清单
+│   └── smart_outfit.db               # SQLite 数据库文件（运行后自动生成）
+│
+├── frontend/                         # 前端代码（Vue 3）
+│   ├── src/                          # 前端源代码
+│   │   ├── api/                      # API 请求封装
+│   │   │   └── index.js              # Axios 实例 + 所有接口封装
+│   │   │
+│   │   ├── assets/                   # 静态资源
+│   │   │   └── styles/
+│   │   │       └── main.css          # 全局样式
+│   │   │
+│   │   ├── router/                   # 路由配置
+│   │   │   └── index.js              # Vue Router 路由表 + 导航守卫
+│   │   │
+│   │   ├── stores/                   # 状态管理
+│   │   │   └── index.js              # Pinia Store（用户状态）
+│   │   │
+│   │   ├── views/                    # 页面组件
+│   │   │   ├── user/                 # 用户端页面
+│   │   │   │   ├── Layout.vue        # 用户端布局框架（导航栏 + 内容区）
+│   │   │   │   ├── Login.vue         # 登录页
+│   │   │   │   ├── Register.vue      # 注册页
+│   │   │   │   ├── Home.vue          # 首页（天气 + 今日推荐）
+│   │   │   │   ├── Forecast.vue      # 天气预报页（7日预报 + 图表）
+│   │   │   │   ├── History.vue       # 历史推荐记录页
+│   │   │   │   └── Profile.vue       # 个人中心页
+│   │   │   │
+│   │   │   └── admin/                # 管理员端页面
+│   │   │       ├── Layout.vue        # 管理端布局框架（侧边栏 + 内容区）
+│   │   │       ├── Dashboard.vue     # 数据看板（统计卡片 + 图表）
+│   │   │       ├── Users.vue         # 用户管理页
+│   │   │       ├── ClothingManage.vue # 服装管理页（增删改查）
+│   │   │       ├── WeatherMonitor.vue # 天气监控页
+│   │   │       └── Recommendations.vue # 推荐记录管理页
+│   │   │
+│   │   ├── App.vue                   # 根组件
+│   │   └── main.js                   # 前端入口（挂载 Vue 实例）
+│   │
+│   ├── index.html                    # HTML 入口
+│   ├── package.json                  # Node.js 依赖清单
+│   ├── vite.config.js                # Vite 构建配置（代理、插件等）
+│   └── node_modules/                 # 依赖包目录（npm install 后生成）
+│
+└── 需求文档                          # 项目需求说明文档
+
+================================================================================
+三、技术架构说明
+================================================================================
+
+————————————————————————————————————————
+3.1  总体架构
+————————————————————————————————————————
+
+  本系统采用经典的前后端分离架构：
+
+    用户浏览器
+        ↓ HTTP 请求
+    前端（Vue 3 + Vite，端口 3000）
+        ↓ API 代理（/api → localhost:5000）
+    后端（Flask，端口 5000）
+        ↓ ORM 操作
+    数据库（SQLite / MySQL）
+
+  前端通过 Vite 的 proxy 配置将所有 /api 开头的请求代理转发到后端。
+  后端接收请求后通过 Flask-SQLAlchemy 操作数据库，返回 JSON 数据。
+
+————————————————————————————————————————
+3.2  后端架构分层
+————————————————————————————————————————
+
+  后端采用三层架构模式：
+
+  Routes 层（路由/控制器）
+    ↓  接收 HTTP 请求，校验参数，调用 Service 层
+  Services 层（业务逻辑）
+    ↓  处理业务逻辑，调用推荐引擎、天气服务
+  Models 层（数据模型）
+    ↓  定义数据库表结构，提供 ORM 操作
+
+————————————————————————————————————————
+3.3  认证机制
+————————————————————————————————————————
+
+  认证流程：
+
+  1) 用户登录 → 后端验证用户名密码
+  2) 验证通过 → 后端用 Flask-JWT-Extended 生成 JWT Token
+  3) Token 返回给前端 → 前端存储在 localStorage
+  4) 后续请求 → 前端在请求头 Authorization 中携带 "Bearer <token>"
+  5) 后端校验 Token → 识别用户身份
+
+  Token 有效期：7天（在 config.py 中配置）
+  Token 过期 → 后端返回 401 → 前端自动跳转登录页
+
+————————————————————————————————————————
+3.4  前端架构
+————————————————————————————————————————
+
+  前端采用 Vue 3 组合式 API 开发，核心技术栈：
+
+  Vue 3          - 渐进式前端框架
+  Vue Router     - 前端路由（SPA 单页应用导航）
+  Pinia          - 状态管理（全局用户状态）
+  Axios          - HTTP 请求库（与后端 API 通信）
+  Element Plus   - UI 组件库（表格、表单、弹窗、图标等）
+  ECharts        - 数据可视化（温度趋势图、统计图表）
+  Day.js         - 日期时间处理
+
+================================================================================
+四、数据库设计
+================================================================================
+
+  数据库共 6 张表，使用 Flask-SQLAlchemy ORM 映射。
+
+————————————————————————————————————————
+4.1  users 表（用户表）
+————————————————————————————————————————
+
+  字段名           类型            说明
+  ————————         ————            ————
+  id               Integer(PK)     主键，自增
+  username         String(64)      用户名，唯一，不为空
+  email            String(120)     邮箱，唯一，不为空
+  password_hash    String(256)     密码哈希值（Werkzeug 生成）
+  nickname         String(64)      昵称
+  avatar           String(512)     头像 URL
+  gender           String(10)      性别：male / female / unknown
+  age              Integer         年龄
+  city             String(64)      所在城市（用于获取天气）
+  body_type        String(20)      体质类型：cold_sensitive（怕冷）/ normal（正常）/ heat_sensitive（怕热）
+  role             String(20)      角色：user（普通用户）/ admin（管理员）
+  is_active        Boolean         是否启用（管理员可禁用用户）
+  created_at       DateTime        创建时间
+  updated_at       DateTime        更新时间
+
+————————————————————————————————————————
+4.2  clothing_categories 表（服装分类表）
+————————————————————————————————————————
+
+  字段名           类型            说明
+  ————————         ————            ————
+  id               Integer(PK)     主键，自增
+  name             String(64)      分类名称（如：上衣、裤子、外套等），唯一
+  description      String(256)     分类描述
+  icon             String(64)      分类图标标识
+  sort_order       Integer         排序序号
+
+  系统预设 19 个分类：上衣、卫衣、毛衣、外套、羽绒服、大衣、裤子、
+  牛仔裤、短裤、裙子、运动鞋、皮鞋、靴子、凉鞋、围巾、帽子、
+  手套、太阳镜、雨伞。
+
+————————————————————————————————————————
+4.3  clothes 表（服装表）
+————————————————————————————————————————
+
+  字段名           类型            说明
+  ————————         ————            ————
+  id               Integer(PK)     主键，自增
+  name             String(128)     服装名称
+  category_id      Integer(FK)     外键 → clothing_categories.id
+  image_url        String(512)     服装图片 URL（Unsplash 在线图片）
+  description      Text            服装描述
+  warmth_level     Integer         保暖等级 1-5（1最凉爽，5最保暖）
+  breathability    Integer         透气性 1-5
+  waterproof       Integer         防水性 1-5
+  formality        Integer         正式度 1-5（1最休闲，5最正式）
+  min_temp         Float           适用最低温度（°C）
+  max_temp         Float           适用最高温度（°C）
+  suitable_scenes  String(256)     适用场景（逗号分隔，如"通勤,运动,旅行"）
+  suitable_gender  String(20)      适用性别：male / female / all
+  is_active        Boolean         是否上架
+  created_at       DateTime        创建时间
+
+  系统预设 46 件服装数据，涵盖春夏秋冬各类服饰、鞋靴和配饰。
+
+————————————————————————————————————————
+4.4  weather_records 表（天气记录表）
+————————————————————————————————————————
+
+  字段名           类型            说明
+  ————————         ————            ————
+  id               Integer(PK)     主键，自增
+  city             String(64)      城市名称
+  date             Date            日期
+  temperature      Float           当前温度（°C）
+  feels_like       Float           体感温度
+  temp_min         Float           最低温度
+  temp_max         Float           最高温度
+  humidity         Integer         湿度（%）
+  wind_speed       Float           风速（km/h）
+  wind_direction   String(20)      风向
+  weather_text     String(64)      天气文本（晴 / 多云 / 小雨 等）
+  weather_icon     String(20)      天气图标代码
+  precipitation    Float           降水量（mm）
+  pressure         Float           气压（hPa）
+  visibility       Float           能见度（km）
+  uv_index         Integer         紫外线指数
+  aqi              Integer         空气质量指数
+  aqi_level        String(20)      空气质量等级
+  sunrise          String(10)      日出时间
+  sunset           String(10)      日落时间
+  fetched_at       DateTime        数据获取时间
+
+  联合唯一约束：(city, date) 保证每个城市每天只有一条天气记录。
+
+————————————————————————————————————————
+4.5  recommendations 表（推荐记录表）
+————————————————————————————————————————
+
+  字段名           类型            说明
+  ————————         ————            ————
+  id               Integer(PK)     主键，自增
+  user_id          Integer(FK)     外键 → users.id
+  city             String(64)      推荐时的城市
+  scene            String(64)      场景（通勤/运动/约会/旅行/商务/居家/聚会）
+  date             Date            推荐日期
+  temperature      Float           推荐时的温度
+  humidity         Integer         推荐时的湿度
+  weather_text     String(64)      推荐时的天气
+  outfit_top       Integer(FK)     上衣 → clothes.id
+  outfit_bottom    Integer(FK)     下装 → clothes.id
+  outfit_outer     Integer(FK)     外套 → clothes.id（可为空）
+  outfit_shoes     Integer(FK)     鞋子 → clothes.id
+  outfit_accessory Integer(FK)     配饰 → clothes.id（可为空）
+  comfort_score    Float           舒适度评分（0-100）
+  match_score      Float           搭配评分（0-100）
+  advice_text      Text            穿衣建议文本
+  algorithm_type   String(32)      使用的算法类型
+  created_at       DateTime        创建时间
+
+————————————————————————————————————————
+4.6  user_feedbacks 表（用户反馈表）
+————————————————————————————————————————
+
+  字段名             类型            说明
+  ————————           ————            ————
+  id                 Integer(PK)     主键，自增
+  user_id            Integer(FK)     外键 → users.id
+  recommendation_id  Integer(FK)     外键 → recommendations.id
+  rating             Integer         评分 1-5
+  comment            Text            评价内容
+  created_at         DateTime        创建时间
+
+————————————————————————————————————————
+4.7  user_preferences 表（用户偏好表）
+————————————————————————————————————————
+
+  字段名           类型            说明
+  ————————         ————            ————
+  id               Integer(PK)     主键，自增
+  user_id          Integer(FK)     外键 → users.id
+  clothing_id      Integer(FK)     外键 → clothes.id
+  preference_score Float           偏好评分 0-5
+  wear_count       Integer         穿着次数
+  last_worn        DateTime        最后穿着时间
+  updated_at       DateTime        更新时间
+
+================================================================================
+五、后端 API 接口列表
+================================================================================
+
+  所有接口以 /api 为前缀，返回 JSON 格式数据。
+  需要登录的接口必须在请求头携带 Authorization: Bearer <token>。
+
+————————————————————————————————————————
+5.1  认证接口（/api/auth）
+————————————————————————————————————————
+
+  POST  /api/auth/register        用户注册
+    请求体: { username, email, password, nickname, gender, age, city, body_type }
+    返回:   { code, msg, data: { token, user } }
+
+  POST  /api/auth/login           用户登录
+    请求体: { username, password }
+    返回:   { code, msg, data: { token, user } }
+
+  GET   /api/auth/profile         获取当前用户信息（需登录）
+    返回:   { code, data: { id, username, email, nickname, ... } }
+
+  PUT   /api/auth/profile         修改个人信息（需登录）
+    请求体: { nickname, gender, age, city, body_type }
+    返回:   { code, msg, data: { user } }
+
+————————————————————————————————————————
+5.2  天气接口（/api/weather）
+————————————————————————————————————————
+
+  GET   /api/weather/now           获取城市实时天气
+    参数:   city（城市名称）
+    返回:   { code, data: { city, temperature, humidity, ... } }
+
+  GET   /api/weather/forecast      获取多日天气预报
+    参数:   city, days（预报天数，默认7）
+    返回:   { code, data: [ { date, temperature, ... }, ... ] }
+
+  GET   /api/weather/cities        获取支持的城市列表
+    返回:   { code, data: [ "北京", "上海", ... ] }
+
+  GET   /api/weather/comfort       计算体感舒适度
+    参数:   temp, humidity, wind
+    返回:   { code, data: { comfort_index, level, description } }
+
+————————————————————————————————————————
+5.3  推荐接口（/api/recommend）
+————————————————————————————————————————
+
+  POST  /api/recommend/generate    生成穿衣推荐（需登录）
+    请求体: { city, scene }
+    返回:   { code, data: { outfit: { top, bottom, outer, shoes, accessory },
+              comfort_score, match_score, advice_text } }
+
+  GET   /api/recommend/today       获取今日推荐（需登录）
+    参数:   city, scene
+    返回:   { code, data: { ... } }
+
+  GET   /api/recommend/history     获取历史推荐记录（需登录）
+    参数:   page, per_page
+    返回:   { code, data: { items: [...], total, pages } }
+
+  POST  /api/recommend/feedback    提交推荐反馈（需登录）
+    请求体: { recommendation_id, rating, comment }
+    返回:   { code, msg }
+
+  GET   /api/recommend/scenes      获取场景列表
+    返回:   { code, data: ["通勤", "运动", "约会", ...] }
+
+————————————————————————————————————————
+5.4  服装接口（/api/clothing）
+————————————————————————————————————————
+
+  GET   /api/clothing/categories   获取所有服装分类
+    返回:   { code, data: [ { id, name, description, icon }, ... ] }
+
+  GET   /api/clothing/list         获取服装列表（支持筛选）
+    参数:   category_id, keyword, page, per_page
+    返回:   { code, data: { items: [...], total } }
+
+  GET   /api/clothing/<id>         获取服装详情
+    返回:   { code, data: { id, name, category_name, warmth_level, ... } }
+
+————————————————————————————————————————
+5.5  用户接口（/api/user）
+————————————————————————————————————————
+
+  GET   /api/user/dashboard        获取用户仪表盘数据（需登录）
+    返回:   { code, data: { total_recommendations, avg_comfort, ... } }
+
+  GET   /api/user/preferences      获取用户偏好列表（需登录）
+    返回:   { code, data: [...] }
+
+  POST  /api/user/preferences      更新用户偏好（需登录）
+    请求体: { clothing_id, preference_score }
+    返回:   { code, msg }
+
+————————————————————————————————————————
+5.6  管理员接口（/api/admin）
+————————————————————————————————————————
+
+  GET   /api/admin/dashboard       获取后台统计数据
+    返回:   { code, data: { user_count, clothing_count, recommendation_count,
+              feedback_count, trend_data, ... } }
+
+  GET   /api/admin/users           获取用户列表（分页搜索）
+    参数:   keyword, page, per_page
+    返回:   { code, data: { items: [...], total, pages } }
+
+  PUT   /api/admin/users/<id>/toggle  启用/禁用用户
+    返回:   { code, msg }
+
+  GET   /api/admin/clothing        获取服装列表（管理视角）
+    参数:   keyword, category_id, page, per_page
+    返回:   { code, data: { items: [...], total, pages } }
+
+  POST  /api/admin/clothing        新增服装
+    请求体: { name, category_id, image_url, description, warmth_level,
+              breathability, waterproof, formality, min_temp, max_temp,
+              suitable_scenes, suitable_gender }
+    返回:   { code, msg, data: { ... } }
+
+  PUT   /api/admin/clothing/<id>   编辑服装
+    请求体: （同新增）
+    返回:   { code, msg }
+
+  DELETE /api/admin/clothing/<id>  删除服装
+    返回:   { code, msg }
+
+  GET   /api/admin/weather/records  获取天气记录列表
+    参数:   city, page, per_page
+    返回:   { code, data: { items: [...], total } }
+
+  GET   /api/admin/recommendations  获取所有推荐记录
+    参数:   page, per_page
+    返回:   { code, data: { items: [...], total } }
+
+================================================================================
+六、核心算法说明
+================================================================================
+
+————————————————————————————————————————
+6.1  决策树分类算法（保暖等级预测）
+————————————————————————————————————————
+
+  文件位置：backend/app/services/recommendation_engine.py
+  类名：    DecisionTreeRecommender
+
+  功能：根据当前天气参数和出行场景，预测用户需要的保暖等级（1-5级）。
+
+  输入特征（6维）：
+    - temperature    当前温度（°C）
+    - humidity       湿度（%）
+    - wind_speed     风速（km/h）
+    - precipitation  降水量（mm）
+    - aqi            空气质量指数
+    - scene_id       场景编号（0-6，对应7种场景）
+
+  输出：warmth_level（1-5）
+    1 = 非常凉爽（适合炎热天气）
+    2 = 轻薄舒适
+    3 = 适中
+    4 = 偏暖
+    5 = 最保暖（适合严寒天气）
+
+  模型参数：
+    - max_depth=8        最大深度8层
+    - min_samples_split=3  最少3个样本才分裂
+    - min_samples_leaf=2   叶子节点最少2个样本
+    - random_state=42      固定随机种子保证可复现
+
+  训练数据：内置35组标注样本，覆盖 -10°C 到 35°C 的不同天气和场景组合。
+
+  个性化调整：
+    - 怕冷体质(cold_sensitive)：保暖等级 +1
+    - 怕热体质(heat_sensitive)：保暖等级 -1
+    - 老年用户(age > 60)：保暖等级 +1
+
+————————————————————————————————————————
+6.2  协同过滤算法（个性化推荐优化）
+————————————————————————————————————————
+
+  文件位置：backend/app/services/recommendation_engine.py
+  类名：    CollaborativeFilter
+
+  功能：基于用户-物品偏好矩阵，利用余弦相似度找到品味相近的用户，
+       参考他们的偏好对候选服装重新排序，实现个性化推荐。
+
+  核心流程：
+
+  1) 构建偏好矩阵
+     从 user_preferences 表读取所有用户对服装的评分数据，
+     构建 { user_id: { clothing_id: score } } 字典。
+
+  2) 计算用户相似度
+     对目标用户和其他用户，找到共同评分的服装项，
+     用余弦相似度公式计算相似程度：
+
+     sim(A,B) = (A·B) / (||A|| × ||B||)
+
+     其中 A、B 分别是两个用户在共同物品上的评分向量。
+     要求至少有2个共同评分项才计算。
+
+  3) 推荐排序
+     选取相似度最高的 top-5 用户作为"邻居"，
+     对每件候选服装，加权计算邻居用户的评分：
+
+     score(item) = Σ(sim_i × rating_i) / Σ|sim_i|
+
+     按加权评分从高到低排序，选出最优推荐。
+
+————————————————————————————————————————
+6.3  推荐生成完整流程
+————————————————————————————————————————
+
+  文件位置：backend/app/services/recommendation_engine.py
+  函数名：  generate_recommendation()
+
+  完整流程：
+
+  1) 接收参数：user_id、city、scene、weather_data
+
+  2) 决策树预测保暖等级
+     调用 dt_model.predict_warmth_level() 获得基础保暖等级
+
+  3) 个性化体质调整
+     根据用户体质类型和年龄微调保暖等级
+
+  4) 候选服装筛选
+     按5个槽位（上衣/下装/外套/鞋子/配饰）分别查询数据库，
+     筛选条件：温度范围匹配、场景匹配、性别匹配、上架状态，
+     按保暖等级差异排序取前20件候选。
+
+  5) 协同过滤精排
+     调用 cf_model.recommend_items() 对每个槽位的候选项做个性化排序，
+     选出最匹配用户偏好的那一件。
+
+  6) 动态穿搭决策
+     根据保暖等级和天气条件决定是否需要外套和配饰：
+     - 保暖等级 >= 3 或有降水或大风 → 需要外套
+     - 保暖等级 >= 4 或有降水或重污染 → 需要配饰
+
+  7) 生成穿衣建议文本
+     根据温度、降水、风速、空气质量、紫外线等生成多条建议。
+
+  8) 计算评分
+     舒适度评分 = 80 - |temp-22|×2 - |humidity-55|×0.3 - wind×0.5
+     搭配评分 = 舒适度 × 0.9 + 10
+
+  9) 保存推荐记录到数据库并返回结果。
+
+————————————————————————————————————————
+6.4  天气数据服务
+————————————————————————————————————————
+
+  文件位置：backend/app/services/weather_service.py
+
+  天气数据来源：
+
+  1) 和风天气 API（QWeather）
+     配置文件：backend/app/config.py 中的 WEATHER_API_KEY
+     API 地址：https://devapi.qweather.com/v7
+     当配置了有效的 API Key 时，系统会调用真实天气接口获取数据。
+
+  2) 本地气候模型（默认兜底方案）
+     当未配置 API Key 或 API 调用失败时，系统使用内置的本地气候模型
+     根据城市地理特征和月份生成模拟天气数据。该模型覆盖：
+     北京、上海、广州、成都、杭州、哈尔滨、深圳等城市。
+
+  缓存机制：
+     天气数据按 (city, date) 缓存到 weather_records 表中，
+     同一城市同一天不会重复请求 API，提高性能并节省 API 调用次数。
+
+================================================================================
+七、前端组件说明
+================================================================================
+
+————————————————————————————————————————
+7.1  入口与全局配置
+————————————————————————————————————————
+
+  frontend/src/main.js
+    创建 Vue 3 应用实例，注册 Pinia 状态管理、Vue Router 路由、
+    Element Plus UI 库（包含全部图标组件的全局注册）。
+
+  frontend/src/App.vue
+    根组件，只包含 <router-view /> 用于渲染当前路由对应的页面。
+
+  frontend/src/api/index.js
+    创建 Axios 实例，配置：
+    - baseURL: '/api'（通过 Vite 代理转发到后端）
+    - timeout: 15000ms（请求超时15秒）
+    - 请求拦截器：自动从 localStorage 读取 token 并加到请求头
+    - 响应拦截器：统一处理错误，401 自动清除登录状态并跳转登录页
+    导出 authApi、weatherApi、recommendApi、clothingApi、userApi、adminApi
+    共6个API模块对象。
+
+  frontend/src/router/index.js
+    路由表：定义用户端和管理员端两组路由。
+    导航守卫：
+    - 需要登录的页面：未登录自动跳转到 /login
+    - 管理员页面：非管理员角色自动跳转到首页
+    - 登录/注册页：已登录自动跳转到首页
+
+  frontend/src/stores/index.js
+    Pinia Store：管理全局用户状态（登录信息、Token）。
+
+————————————————————————————————————————
+7.2  用户端页面
+————————————————————————————————————————
+
+  Login.vue（登录页）
+    - 表单：用户名/邮箱 + 密码
+    - 登录成功后保存 token 和 user 到 localStorage
+    - 根据角色跳转：管理员→/admin，用户→首页
+
+  Register.vue（注册页）
+    - 表单：用户名、邮箱、密码、确认密码、昵称、性别、年龄、城市、体质
+    - 表单校验：用户名/邮箱必填、密码长度≥6、两次密码一致
+    - 注册成功自动登录并跳转首页
+
+  Layout.vue（用户端布局）
+    - 顶部导航栏：首页、天气预报、历史记录、个人中心
+    - 右上角显示用户昵称和退出按钮
+    - 底部 <router-view /> 渲染子页面
+
+  Home.vue（首页 —— 核心页面）
+    - 顶部：城市选择器 + 天气实时数据展示卡片（温度、体感、湿度、
+      风力、降水、空气质量等）
+    - 中部：场景选择按钮组（通勤/运动/约会/旅行/商务/居家/聚会）
+    - 下部：穿衣推荐结果展示
+      - 5个槽位卡片：上衣、下装、外套、鞋子、配饰
+      - 每个卡片显示：服装图片、名称、分类、属性指标
+      - 舒适度评分 + 搭配评分 + 穿衣建议文字
+
+  Forecast.vue（天气预报页）
+    - 城市选择器
+    - 7日天气预报列表（日期、天气、温度范围、湿度、风力）
+    - ECharts 温度趋势折线图（最高温/最低温双曲线）
+    - 每日穿衣建议
+
+  History.vue（历史记录页）
+    - 推荐历史列表（Element Plus Table 组件）
+    - 每条记录显示：日期、城市、场景、温度、搭配方案、评分
+    - 分页功能
+    - 评分反馈：点击可对历史推荐进行 1-5 星评分
+
+  Profile.vue（个人中心）
+    - 用户信息表单（昵称、性别、年龄、城市、体质类型）
+    - 表单可编辑并提交保存
+    - 修改城市后推荐结果会基于新城市的天气数据
+    - 修改体质类型后推荐的保暖等级会做相应调整
+
+————————————————————————————————————————
+7.3  管理员端页面
+————————————————————————————————————————
+
+  Layout.vue（管理端布局）
+    - 左侧侧边栏菜单：数据看板、用户管理、服装管理、天气监控、推荐记录
+    - 右侧内容区渲染子页面
+    - 顶部显示管理员信息和返回用户端入口
+
+  Dashboard.vue（数据看板）
+    - 4个统计卡片：总用户数、总服装数、推荐总数、反馈总数
+    - ECharts 图表：推荐趋势折线图、场景分布饼图
+    - 数据实时从后端 /api/admin/dashboard 接口获取
+
+  Users.vue（用户管理）
+    - 用户列表表格：用户名、邮箱、昵称、角色、城市、体质、状态、注册时间
+    - 搜索框：按用户名/邮箱搜索
+    - 操作列：启用/禁用用户开关
+    - 分页功能
+
+  ClothingManage.vue（服装管理）
+    - 服装列表表格：名称、分类、图片预览、保暖/透气/防水/正式度指标、
+      温度范围、场景、状态
+    - 顶部：搜索框 + 分类筛选下拉框 + 新增按钮
+    - 新增/编辑弹窗（Dialog）：包含所有服装属性的表单
+    - 删除确认弹窗
+    - 所有操作即时同步到后端数据库
+
+  WeatherMonitor.vue（天气监控）
+    - 天气记录表格：城市、日期、温度、湿度、天气状况、风力等
+    - 城市筛选下拉框
+    - 分页功能
+
+  Recommendations.vue（推荐记录管理）
+    - 推荐记录表格：用户名、城市、场景、日期、温度、舒适度评分、
+      搭配评分、算法类型
+    - 展开行可查看具体推荐了哪些服装
+    - 分页功能
+
+================================================================================
+八、关键文件说明速查表
+================================================================================
+
+  文件路径                                 作用
+  ————————                                 ————
+  backend/run.py                           后端启动入口，python run.py 启动服务
+  backend/init_db.py                       数据库初始化 + 填充示例数据
+  backend/app/__init__.py                  Flask 应用工厂，注册所有蓝图和JWT处理
+  backend/app/config.py                    配置文件（密钥、数据库URL、天气API地址）
+  backend/app/models/user.py               用户模型（密码哈希、角色、体质）
+  backend/app/models/clothing.py           服装模型 + 分类模型
+  backend/app/models/weather.py            天气记录模型
+  backend/app/models/recommendation.py     推荐记录 + 用户反馈 + 用户偏好模型
+  backend/app/routes/auth.py               登录注册接口
+  backend/app/routes/weather.py            天气数据接口
+  backend/app/routes/recommendation.py     推荐生成/历史/反馈接口
+  backend/app/routes/clothing.py           服装分类/列表/详情接口
+  backend/app/routes/user.py               用户仪表盘/偏好接口
+  backend/app/routes/admin.py              管理员后台全部接口
+  backend/app/services/weather_service.py  天气数据获取 + 本地气候模型 + 缓存
+  backend/app/services/recommendation_engine.py  决策树 + 协同过滤推荐引擎
+
+  frontend/src/main.js                     前端入口
+  frontend/src/api/index.js                Axios封装 + 6大API模块
+  frontend/src/router/index.js             路由表 + 导航守卫
+  frontend/src/stores/index.js             Pinia 用户状态管理
+  frontend/src/views/user/Home.vue         用户端首页（天气+推荐核心页面）
+  frontend/src/views/user/Forecast.vue     天气预报页（图表）
+  frontend/src/views/user/History.vue      历史推荐记录页
+  frontend/src/views/user/Profile.vue      个人中心页
+  frontend/src/views/admin/Dashboard.vue   管理端数据看板
+  frontend/src/views/admin/ClothingManage.vue  服装管理页（增删改查）
+  frontend/src/views/admin/Users.vue       用户管理页
+  frontend/vite.config.js                  Vite配置（端口3000、代理到5000）
+  frontend/package.json                    前端依赖清单
+
+================================================================================
+九、依赖包清单
+================================================================================
+
+————————————————————————————————————————
+9.1  后端 Python 依赖（requirements.txt）
+————————————————————————————————————————
+
+  包名                版本       用途
+  ————                ————       ————
+  flask               3.1.0      Web 框架
+  flask-cors          5.0.1      跨域请求支持
+  flask-sqlalchemy    3.1.1      SQLAlchemy ORM 集成
+  flask-jwt-extended  4.7.1      JWT 认证
+  flask-migrate       4.1.0      数据库迁移管理
+  pymysql             1.1.1      MySQL 驱动（生产环境可选）
+  cryptography        44.0.0     加密库
+  pandas              2.2.3      数据分析与处理
+  numpy               2.2.3      数值计算
+  scikit-learn        1.6.1      机器学习（决策树分类器）
+  requests            2.32.3     HTTP 请求（调用天气API）
+  werkzeug            3.1.3      WSGI 工具（密码哈希）
+  python-dotenv       1.1.0      环境变量管理
+  apscheduler         3.11.0     定时任务调度
+
+————————————————————————————————————————
+9.2  前端 Node.js 依赖（package.json）
+————————————————————————————————————————
+
+  包名                       版本       用途
+  ————                       ————       ————
+  vue                        ^3.5.13    前端框架 Vue 3
+  vue-router                 ^4.5.0     前端路由
+  pinia                      ^3.0.2     状态管理
+  axios                      ^1.8.4     HTTP 请求
+  element-plus               ^2.9.7     UI 组件库
+  @element-plus/icons-vue    ^2.3.1     Element Plus SVG 图标
+  echarts                    ^5.6.0     数据可视化图表
+  dayjs                      ^1.11.13   日期时间处理
+  @vitejs/plugin-vue         ^5.2.3     Vite Vue 插件（开发依赖）
+  vite                       ^6.3.2     前端构建工具（开发依赖）
+  unplugin-auto-import       ^19.1.2    自动导入插件（开发依赖）
+  unplugin-vue-components    ^28.4.1    自动注册组件插件（开发依赖）
+
+================================================================================
+十、配置项说明
+================================================================================
+
+————————————————————————————————————————
+10.1  后端配置（backend/app/config.py）
+————————————————————————————————————————
+
+  SECRET_KEY
+    Flask 应用密钥，用于 Session 加密。
+    默认值: 'smart-outfit-service-2026-secret'
+    可通过环境变量 SECRET_KEY 覆盖。
+
+  JWT_SECRET_KEY
+    JWT 签名密钥，用于 Token 生成和验证。
+    默认值: 'jwt-smart-outfit-2026'
+    可通过环境变量 JWT_SECRET_KEY 覆盖。
+
+  JWT_ACCESS_TOKEN_EXPIRES
+    Token 有效期，默认 7 天。
+
+  WEATHER_API_KEY
+    和风天气 API 密钥。
+    为空时使用本地气候模型生成模拟数据。
+    可通过环境变量 WEATHER_API_KEY 设置。
+
+  SQLALCHEMY_DATABASE_URI
+    数据库连接地址。
+    开发环境默认: sqlite:///smart_outfit.db
+    生产环境默认: mysql+pymysql://root:password@localhost/smart_outfit
+    可通过环境变量 DATABASE_URL 覆盖。
+
+————————————————————————————————————————
+10.2  前端配置（frontend/vite.config.js）
+————————————————————————————————————————
+
+  server.port
+    前端开发服务器端口，默认 3000。
+
+  server.proxy
+    API 代理配置，将 /api 开头的请求转发到 http://localhost:5000。
+    修改后端端口时需要同步修改此处的 target。
+
+================================================================================
+十一、初始示例数据说明
+================================================================================
+
+  运行 python init_db.py 后系统会自动填充以下数据：
+
+  1) 服装分类：19个（上衣、卫衣、毛衣、外套、羽绒服、大衣、裤子、
+     牛仔裤、短裤、裙子、运动鞋、皮鞋、靴子、凉鞋、围巾、帽子、
+     手套、太阳镜、雨伞）
+
+  2) 服装数据：46件，涵盖四季服饰，每件包含完整属性
+     （保暖等级、透气性、防水性、正式度、温度范围、适用场景、性别等）。
+     图片使用 Unsplash 在线图片链接。
+
+  3) 用户数据：8个用户
+     - 1个管理员（admin/admin123）
+     - 7个普通用户（密码均为 123456），分布在不同城市、不同体质
+
+  4) 用户偏好：约105条（每个普通用户随机对15件服装打分）
+
+  5) 天气数据：约105条（7个城市 × 15天的天气记录）
+
+  6) 推荐记录：约56-84条（每个普通用户5-12条历史推荐），部分附带评价反馈
+
+================================================================================
+代码说明文档 —— 完
+================================================================================

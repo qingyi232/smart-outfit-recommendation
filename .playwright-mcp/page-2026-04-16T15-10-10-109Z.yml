@@ -1,0 +1,86 @@
+- generic [ref=e3]:
+  - complementary [ref=e4]:
+    - generic [ref=e5]:
+      - img [ref=e7]
+      - text: 管理后台
+    - menubar [ref=e9]:
+      - menuitem "数据概览" [ref=e10] [cursor=pointer]:
+        - img [ref=e12]
+        - generic [ref=e14]: 数据概览
+      - menuitem "用户管理" [ref=e15] [cursor=pointer]:
+        - img [ref=e17]
+        - generic [ref=e19]: 用户管理
+      - menuitem "服装管理" [ref=e20] [cursor=pointer]:
+        - img [ref=e22]
+        - generic [ref=e24]: 服装管理
+      - menuitem "天气监控" [ref=e25] [cursor=pointer]:
+        - img [ref=e27]
+        - generic [ref=e29]: 天气监控
+      - menuitem "推荐记录" [ref=e30] [cursor=pointer]:
+        - img [ref=e32]
+        - generic [ref=e34]: 推荐记录
+  - generic [ref=e35]:
+    - banner [ref=e36]:
+      - generic [ref=e37]: 智能出行穿衣服务系统 · 管理控制台
+      - generic [ref=e38]:
+        - button "返回前台" [ref=e39] [cursor=pointer]:
+          - generic [ref=e40]:
+            - img [ref=e42]
+            - text: 返回前台
+        - button "系 系统管理员" [ref=e45] [cursor=pointer]:
+          - generic [ref=e46]: 系
+          - generic [ref=e47]: 系统管理员
+    - generic [ref=e49]:
+      - generic [ref=e50]:
+        - heading "服装管理" [level=2] [ref=e51]
+        - generic [ref=e52]:
+          - generic [ref=e54] [cursor=pointer]:
+            - generic:
+              - combobox [ref=e56]
+              - generic [ref=e57]: 全部分类
+            - img [ref=e60]
+          - button "添加服装" [ref=e62] [cursor=pointer]:
+            - generic [ref=e63]:
+              - img [ref=e65]
+              - text: 添加服装
+      - generic [ref=e68]:
+        - generic [ref=e69]:
+          - generic [ref=e70]:
+            - table [ref=e72]:
+              - rowgroup [ref=e84]:
+                - row "ID 图片 名称 分类 保暖 透气 防水 温度范围 场景 操作" [ref=e85]:
+                  - columnheader "ID" [ref=e86]:
+                    - generic [ref=e87]: ID
+                  - columnheader "图片" [ref=e88]:
+                    - generic [ref=e89]: 图片
+                  - columnheader "名称" [ref=e90]:
+                    - generic [ref=e91]: 名称
+                  - columnheader "分类" [ref=e92]:
+                    - generic [ref=e93]: 分类
+                  - columnheader "保暖" [ref=e94]:
+                    - generic [ref=e95]: 保暖
+                  - columnheader "透气" [ref=e96]:
+                    - generic [ref=e97]: 透气
+                  - columnheader "防水" [ref=e98]:
+                    - generic [ref=e99]: 防水
+                  - columnheader "温度范围" [ref=e100]:
+                    - generic [ref=e101]: 温度范围
+                  - columnheader "场景" [ref=e102]:
+                    - generic [ref=e103]: 场景
+                  - columnheader "操作" [ref=e104]:
+                    - generic [ref=e105]: 操作
+            - generic [ref=e109]:
+              - table:
+                - rowgroup
+              - generic [ref=e111]: No Data
+          - img [ref=e114]
+        - generic [ref=e117]:
+          - generic [ref=e118]: Total 0
+          - button "Go to previous page" [disabled] [ref=e119]:
+            - generic:
+              - img
+          - list [ref=e120]:
+            - listitem "page 1" [ref=e121]: "1"
+          - button "Go to next page" [disabled] [ref=e122]:
+            - generic:
+              - img
